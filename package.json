@@ -1,0 +1,13 @@
+{
+  "name": "excalidraw-shelf",
+  "version": "1.0.0",
+  "description": "Manage Excalidraw scenes and sync them with cloud storage",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.28.1"
+}
