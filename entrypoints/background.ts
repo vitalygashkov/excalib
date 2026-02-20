@@ -31,17 +31,21 @@ export default defineBackground(() => {
     void configureAutoSyncAlarm();
   });
 
-  browser.runtime.onMessage.addListener((message) => {
+  browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (!isShelfRequest(message)) {
-      return undefined;
+      return false;
     }
 
-    return handleShelfMessage(message).catch((error) => {
-      return {
-        error: {
-          message: toErrorMessage(error),
-        },
-      };
-    });
+    void handleShelfMessage(message)
+      .then((response) => {
+        sendResponse(response);
+      })
+      .catch((error) => {
+        sendResponse({
+          error: { message: toErrorMessage(error) },
+        });
+      });
+
+    return true;
   });
 });

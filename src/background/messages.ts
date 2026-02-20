@@ -32,6 +32,7 @@ import type {
 import { ShelfProtocolError } from "@/src/shared/protocol";
 
 export async function handleShelfMessage(message: ShelfRequest): Promise<ShelfResponse> {
+  console.log("handleShelfMessage", message);
   await ensureBootstrap();
 
   const safeAuthState = async () => {
@@ -80,6 +81,7 @@ export async function handleShelfMessage(message: ShelfRequest): Promise<ShelfRe
 
     case "scene.create": {
       const scene = await createScene(message.title);
+      console.log("scene.create", scene);
       const response: SceneMutationResponse = { scene };
       return response;
     }

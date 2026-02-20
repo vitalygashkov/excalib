@@ -13,6 +13,8 @@ export function notifySuccess(message: string) {
 }
 
 export function notifyError(message: string, actionLabel?: string, onAction?: () => void) {
+  console.error(message);
+
   if (actionLabel && onAction) {
     toast.error(message, {
       action: {

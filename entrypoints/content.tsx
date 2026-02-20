@@ -224,10 +224,15 @@ function ContentShelfApp() {
 
     try {
       await saveCurrentScene();
+      console.log("sendShelfMessage", {
+        title: newSceneTitle().trim() || undefined,
+        type: "scene.create",
+      });
       const created = await sendShelfMessage<SceneMutationResponse>({
         title: newSceneTitle().trim() || undefined,
         type: "scene.create",
       });
+      console.log("created", created);
 
       setScenes((prev) => upsertScene(prev, created.scene));
       setNewSceneTitle("");
