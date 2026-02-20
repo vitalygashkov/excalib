@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, type Accessor } from "solid-js";
 import { Cloud, Library, X } from "lucide-solid";
 import { Badge, Button, Tabs, TabsList, TabsTrigger, Toaster } from "@/src/components/ui";
 import { ScenesTab } from "@/src/features/scenes/scenes-tab";
@@ -7,18 +7,22 @@ import { ArchiveTab } from "@/src/features/archive/archive-tab";
 import { syncBadgeVariant, formatRelativeTime } from "@/src/features/shelf/utils";
 import { useShelfController } from "@/src/features/shelf/use-shelf-controller";
 
-export function App() {
+type AppProps = {
+  theme: Accessor<"light" | "dark">;
+};
+
+export function App(props: AppProps) {
   const controller = useShelfController();
 
   return (
     <>
-      <Toaster />
+      <Toaster theme={props.theme()} />
 
       <div class="style-vega fixed right-[68px] bottom-4 z-2147483646 flex items-center gap-3">
         <Show when={controller.currentSceneId()}>
           <div
             title="Click to rename scene"
-            class="text-xl font-medium cursor-pointer"
+            class="text-foreground text-xl font-medium cursor-pointer"
             onClick={() =>
               void controller.renameScene(
                 controller.sceneRows().find((scene) => scene.id === controller.currentSceneId())!,
@@ -39,7 +43,7 @@ export function App() {
       </div>
 
       <aside
-        class="style-vega fixed right-0 top-0 bottom-0 z-2147483647 h-screen w-[360px] border border-border bg-background p-3 shadow-xl"
+        class="style-vega fixed right-0 top-0 bottom-0 z-2147483647 h-screen w-[360px] bg-background text-foreground p-3 shadow-xl"
         classList={{ "translate-x-[400px] opacity-0": !controller.panelOpen() }}
         onKeyDown={controller.stopShortcutPropagation}
         onKeyPress={controller.stopShortcutPropagation}

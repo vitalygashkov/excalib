@@ -96,7 +96,7 @@
 }
 
 .z-badge-variant-secondary {
-  @apply bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80;
+  @apply bg-secondary dark:bg-muted text-secondary-foreground [a]:hover:bg-secondary/80;
 }
 
 .z-badge-variant-outline {

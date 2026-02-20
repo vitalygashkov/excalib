@@ -1,7 +1,9 @@
+import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
 
 import styleText from "@/src/styles.css?inline";
 import { App } from "@/src/app";
+import { setupThemeSync, type ShelfTheme } from "@/src/content/theme-sync";
 import { setupKeyboardShortcutFirewall } from "@/src/lib/keyboard-firewall";
 
 export default defineContentScript({
@@ -26,6 +28,13 @@ export default defineContentScript({
     document.documentElement.append(host);
     setupKeyboardShortcutFirewall(host, shadowRoot);
 
-    render(() => <App />, mount);
+    const [theme, setTheme] = createSignal<ShelfTheme>("light");
+    setupThemeSync({
+      host,
+      mount,
+      onThemeChange: setTheme,
+    });
+
+    render(() => <App theme={theme} />, mount);
   },
 });

@@ -2,13 +2,12 @@ import { CircleCheck, Info, LoaderCircle, OctagonX, TriangleAlert } from "lucide
 import type { Component, ComponentProps, JSX } from "solid-js";
 import { Toaster as Sonner } from "solid-sonner";
 
-type ToasterProps = ComponentProps<typeof Sonner>;
+type ToasterProps = Omit<ComponentProps<typeof Sonner>, "theme"> & {
+  theme: "light" | "dark";
+};
 
 const Toaster: Component<ToasterProps> = (props) => {
-  const currentTheme =
-    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
-      ? "dark"
-      : "light";
+  const { theme, ...rest } = props;
 
   return (
     <Sonner
@@ -29,8 +28,8 @@ const Toaster: Component<ToasterProps> = (props) => {
           "--border-radius": "var(--radius)",
         } as JSX.CSSProperties
       }
-      theme={currentTheme}
-      {...props}
+      theme={theme}
+      {...rest}
     />
   );
 };

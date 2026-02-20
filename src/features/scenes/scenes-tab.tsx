@@ -36,7 +36,7 @@ export function ScenesTab(props: ScenesTabProps) {
           placeholder="New scene title"
           value={props.newSceneTitle()}
         />
-        <Button disabled={Boolean(props.busy())} onClick={props.onCreateScene} size="icon-sm">
+        <Button disabled={Boolean(props.busy())} onClick={props.onCreateScene} size="icon">
           <Plus class="size-4" />
           <span class="sr-only">Create scene</span>
         </Button>
@@ -60,9 +60,9 @@ export function ScenesTab(props: ScenesTabProps) {
         >
           {(scene) => (
             <div
-              class="flex items-center gap-2 rounded-md border px-2"
+              class="flex items-center gap-2 rounded-md border border-border px-2"
               classList={{
-                "border-primary bg-primary/5": scene.id === props.currentSceneId(),
+                "border-primary/50 bg-primary/5": scene.id === props.currentSceneId(),
               }}
             >
               <button
