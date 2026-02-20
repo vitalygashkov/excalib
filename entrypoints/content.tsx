@@ -139,7 +139,9 @@ function ContentShelfApp() {
 
   const initialize = async () => {
     try {
+      console.log("initialize");
       const response = await sendShelfMessage<InitResponse>({ type: "init" });
+      console.log("initialize", response);
       setSettings(response.settings);
       setSyncState(response.syncState);
       setAuth(response.auth);
@@ -163,6 +165,7 @@ function ContentShelfApp() {
         sendShelfMessage<SceneCurrentResponse>({ type: "scene.current" }),
         sendShelfMessage<SettingsResponse>({ type: "settings.get" }),
       ]);
+      console.log("initialize", { sceneResult, currentResult, settingsResult });
 
       if (sceneResult.status === "fulfilled") {
         setScenes(sortScenes(sceneResult.value.scenes));
@@ -429,7 +432,9 @@ function ContentShelfApp() {
   };
 
   onMount(() => {
-    void initialize().catch((error) => {
+    console.log("onMount");
+
+    initialize().catch((error) => {
       notifyError(error instanceof Error ? error.message : String(error));
       setReady(true);
     });
@@ -472,11 +477,24 @@ function ContentShelfApp() {
     });
   });
 
+  const currentScene = createMemo(() => {
+    return sceneRows().find((scene) => scene.id === currentSceneId());
+  });
+
+  const currentSceneName = createMemo(() => {
+    return currentScene()?.title ?? "Untitled";
+  });
+
   return (
     <>
       <Toaster />
 
-      <div class="style-vega fixed right-[68px] bottom-4 z-[2147483647] flex items-center gap-2">
+      <div class="style-vega fixed right-[68px] bottom-4 z-[2147483647] flex items-center gap-3">
+        <Show when={currentScene()}>
+          <div class="text-xl font-medium" onDblClick={() => handleRenameScene(currentScene()!)}>
+            {currentSceneName()}
+          </div>
+        </Show>
         <Button
           aria-label={panelOpen() ? "Collapse library" : "Open library"}
           size="icon-lg"

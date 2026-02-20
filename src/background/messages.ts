@@ -36,9 +36,11 @@ export async function handleShelfMessage(message: ShelfRequest): Promise<ShelfRe
   await ensureBootstrap();
 
   const safeAuthState = async () => {
+    console.log("safeAuthState");
     try {
       return await getAuthState();
-    } catch {
+    } catch (error) {
+      console.error(error);
       return {
         signedIn: false,
         tokenAvailable: false,
@@ -62,6 +64,7 @@ export async function handleShelfMessage(message: ShelfRequest): Promise<ShelfRe
         syncState,
       };
 
+      console.log("init", response);
       return response;
     }
 

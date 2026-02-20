@@ -32,12 +32,14 @@ export default defineBackground(() => {
   });
 
   browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    console.log("onMessage", message);
     if (!isShelfRequest(message)) {
       return false;
     }
 
-    void handleShelfMessage(message)
+    handleShelfMessage(message)
       .then((response) => {
+        console.log("sendResponse", response);
         sendResponse(response);
       })
       .catch((error) => {

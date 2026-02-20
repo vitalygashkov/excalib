@@ -69,6 +69,7 @@ export async function ensureBootstrap() {
 }
 
 export async function listScenes(includeDeleted = false) {
+  console.log("listScenes", { includeDeleted });
   await ensureBootstrap();
   const db = await getShelfDb();
   const scenes = await db.getAll("scenes");
@@ -76,6 +77,7 @@ export async function listScenes(includeDeleted = false) {
 }
 
 export async function getCurrentSceneId() {
+  console.log("getCurrentSceneId");
   await ensureBootstrap();
   const db = await getShelfDb();
   const sceneId = await db.get("meta", CURRENT_SCENE_META_KEY);
@@ -285,9 +287,7 @@ export async function createBackup(
   await db.put("backups", backup);
 
   const backups = await db.getAllFromIndex("backups", "by-sceneId", sceneId);
-  const extra = backups
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(Math.max(0, retention));
+  const extra = backups.sort((a, b) => b.createdAt - a.createdAt).slice(Math.max(0, retention));
 
   await Promise.all(extra.map((item) => db.delete("backups", item.id)));
 }

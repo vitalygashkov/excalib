@@ -27,7 +27,10 @@ function parseDriveTime(value: string | undefined) {
 
 export async function getAuthToken(interactive: boolean) {
   try {
+    console.log("getAuthToken", { interactive });
+    // TODO: Figure out why this may hang out (maybe because mismatch between current extension ID and the one in the Google OAuth client settings)
     const result = await browser.identity.getAuthToken({ interactive });
+    console.log(result);
     if (typeof result === "string") {
       return result;
     }
@@ -66,6 +69,7 @@ export async function signOut() {
 }
 
 export async function getAuthState(): Promise<AuthState> {
+  console.log("getAuthState");
   const token = await getAuthToken(false);
   return {
     signedIn: Boolean(token),
