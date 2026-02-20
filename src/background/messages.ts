@@ -1,8 +1,4 @@
-import {
-  getAuthState,
-  getAuthToken,
-  signOut,
-} from "@/src/background/drive";
+import { getAuthState, getAuthToken, signOut } from "@/src/background/drive";
 import {
   createScene,
   deleteScene,
@@ -15,7 +11,12 @@ import {
   restoreScene,
   saveCurrentScene,
 } from "@/src/background/scenes";
-import { getSettings, getSyncState, updateSettings, updateSyncState } from "@/src/background/settings";
+import {
+  getSettings,
+  getSyncState,
+  updateSettings,
+  updateSyncState,
+} from "@/src/background/settings";
 import { runSync } from "@/src/background/sync";
 import type {
   InitResponse,
@@ -33,13 +34,24 @@ import { ShelfProtocolError } from "@/src/shared/protocol";
 export async function handleShelfMessage(message: ShelfRequest): Promise<ShelfResponse> {
   await ensureBootstrap();
 
+  const safeAuthState = async () => {
+    try {
+      return await getAuthState();
+    } catch {
+      return {
+        signedIn: false,
+        tokenAvailable: false,
+      };
+    }
+  };
+
   switch (message.type) {
     case "init": {
       const scenes = await listScenes(true);
       const currentSceneId = await getCurrentSceneId();
       const settings = await getSettings();
       const syncState = await getSyncState();
-      const auth = await getAuthState();
+      const auth = await safeAuthState();
 
       const response: InitResponse = {
         auth,
@@ -147,13 +159,13 @@ export async function handleShelfMessage(message: ShelfRequest): Promise<ShelfRe
 
     case "auth.status": {
       return {
-        auth: await getAuthState(),
+        auth: await safeAuthState(),
       };
     }
 
     case "auth.signin": {
       const token = await getAuthToken(true);
-      const auth = await getAuthState();
+      const auth = await safeAuthState();
 
       if (!token || !auth.signedIn) {
         throw new ShelfProtocolError("Google Drive sign-in failed");
@@ -172,7 +184,7 @@ export async function handleShelfMessage(message: ShelfRequest): Promise<ShelfRe
         lastError: null,
       });
       return {
-        auth: await getAuthState(),
+        auth: await safeAuthState(),
       };
     }
 

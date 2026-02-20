@@ -56,13 +56,14 @@ export async function runSync(mode: "auto" | "manual") {
 
   if (!token) {
     const syncState = await updateSyncState({
-      lastError: "Not signed in to Google Drive",
+      lastError: null,
     });
 
     return {
       result: {
-        message: "Sign in to Google Drive first",
-        status: "offline",
+        message:
+          mode === "manual" ? "Sign in to Google Drive to sync" : "Google Drive is not connected",
+        status: mode === "manual" ? "offline" : "pending",
       } as const,
       syncState,
     };
@@ -152,7 +153,13 @@ export async function runSync(mode: "auto" | "manual") {
         continue;
       }
 
-      const upload = await uploadSceneFile(token, folderId, local, payload, remote?.fileId ?? local.driveFileId);
+      const upload = await uploadSceneFile(
+        token,
+        folderId,
+        local,
+        payload,
+        remote?.fileId ?? local.driveFileId,
+      );
 
       const updatedAt = upload.modifiedTime;
       const nextManifestScene: DriveManifestScene = {

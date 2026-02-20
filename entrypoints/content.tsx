@@ -12,11 +12,27 @@ import {
   RotateCcw,
   Trash2,
   Trash,
+  X,
+  Library,
 } from "lucide-solid";
 
 import styleText from "@/src/styles.css?inline";
-import { Badge, Button, Input, Switch, Tabs, TabsContent, TabsList, TabsTrigger, Toaster } from "@/src/components/ui";
-import { captureScenePayloadFromPage, applyScenePayloadToPage, reloadAfterSceneApply } from "@/src/content/excalidraw-bridge";
+import {
+  Badge,
+  Button,
+  Input,
+  Switch,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Toaster,
+} from "@/src/components/ui";
+import {
+  captureScenePayloadFromPage,
+  applyScenePayloadToPage,
+  reloadAfterSceneApply,
+} from "@/src/content/excalidraw-bridge";
 import { sendShelfMessage } from "@/src/shared/runtime";
 import type {
   InitResponse,
@@ -112,7 +128,10 @@ function ContentShelfApp() {
   };
 
   const refreshScenes = async () => {
-    const response = await sendShelfMessage<SceneListResponse>({ includeDeleted: true, type: "scene.list" });
+    const response = await sendShelfMessage<SceneListResponse>({
+      includeDeleted: true,
+      type: "scene.list",
+    });
     setScenes(sortScenes(response.scenes));
 
     const current = await sendShelfMessage<SceneCurrentResponse>({ type: "scene.current" });
@@ -120,22 +139,45 @@ function ContentShelfApp() {
   };
 
   const initialize = async () => {
-    const response = await sendShelfMessage<InitResponse>({ type: "init" });
-    setSettings(response.settings);
-    setSyncState(response.syncState);
-    setAuth(response.auth);
-    setScenes(sortScenes(response.scenes));
-    setCurrentSceneId(response.currentSceneId);
+    try {
+      const response = await sendShelfMessage<InitResponse>({ type: "init" });
+      setSettings(response.settings);
+      setSyncState(response.syncState);
+      setAuth(response.auth);
+      setScenes(sortScenes(response.scenes));
+      setCurrentSceneId(response.currentSceneId);
 
-    if (response.syncState.lastError) {
-      setSyncStatus("error");
-    } else if (response.syncState.lastSyncAt) {
-      setSyncStatus("synced");
-    } else {
+      if (response.syncState.lastError) {
+        setSyncStatus("error");
+      } else if (response.syncState.lastSyncAt) {
+        setSyncStatus("synced");
+      } else {
+        setSyncStatus("pending");
+      }
+    } catch {
+      // Local-first fallback: still load scene/settings data even if full init response fails.
+      const [sceneResult, currentResult, settingsResult] = await Promise.allSettled([
+        sendShelfMessage<SceneListResponse>({ includeDeleted: true, type: "scene.list" }),
+        sendShelfMessage<SceneCurrentResponse>({ type: "scene.current" }),
+        sendShelfMessage<SettingsResponse>({ type: "settings.get" }),
+      ]);
+
+      if (sceneResult.status === "fulfilled") {
+        setScenes(sortScenes(sceneResult.value.scenes));
+      }
+
+      if (currentResult.status === "fulfilled") {
+        setCurrentSceneId(currentResult.value.currentSceneId);
+      }
+
+      if (settingsResult.status === "fulfilled") {
+        setSettings(settingsResult.value.settings);
+      }
+
       setSyncStatus("pending");
+    } finally {
+      setReady(true);
     }
-
-    setReady(true);
   };
 
   const saveCurrentScene = async () => {
@@ -207,16 +249,15 @@ function ContentShelfApp() {
     setBusy(`delete:${scene.id}`);
 
     try {
-      const response = await sendShelfMessage<SceneMutationResponse>({ sceneId: scene.id, type: "scene.delete" });
+      const response = await sendShelfMessage<SceneMutationResponse>({
+        sceneId: scene.id,
+        type: "scene.delete",
+      });
       setScenes((prev) => upsertScene(prev, response.scene));
 
-      notifyError(
-        `Moved ${scene.title} to Trash`,
-        "Undo",
-        () => {
-          void handleRestoreScene(scene.id);
-        },
-      );
+      notifyError(`Moved ${scene.title} to Trash`, "Undo", () => {
+        void handleRestoreScene(scene.id);
+      });
 
       if (scene.id === currentSceneId()) {
         const current = await sendShelfMessage<SceneCurrentResponse>({ type: "scene.current" });
@@ -237,7 +278,10 @@ function ContentShelfApp() {
     setBusy(`restore:${sceneId}`);
 
     try {
-      const response = await sendShelfMessage<SceneMutationResponse>({ sceneId, type: "scene.restore" });
+      const response = await sendShelfMessage<SceneMutationResponse>({
+        sceneId,
+        type: "scene.restore",
+      });
       setScenes((prev) => upsertScene(prev, response.scene));
       notifySuccess(`Restored ${response.scene.title}`);
     } catch (error) {
@@ -275,7 +319,11 @@ function ContentShelfApp() {
     setBusy(`rename:${scene.id}`);
 
     try {
-      const response = await sendShelfMessage<SceneMutationResponse>({ sceneId: scene.id, title, type: "scene.rename" });
+      const response = await sendShelfMessage<SceneMutationResponse>({
+        sceneId: scene.id,
+        title,
+        type: "scene.rename",
+      });
       setScenes((prev) => upsertScene(prev, response.scene));
       notifySuccess(`Renamed to ${response.scene.title}`);
     } catch (error) {
@@ -343,6 +391,7 @@ function ContentShelfApp() {
     try {
       const response = await sendShelfMessage<{ auth: AuthState }>({ type: "auth.signin" });
       setAuth(response.auth);
+      setSyncStatus("pending");
       notifySuccess("Google Drive connected");
     } catch (error) {
       notifyError(
@@ -361,6 +410,7 @@ function ContentShelfApp() {
     try {
       const response = await sendShelfMessage<{ auth: AuthState }>({ type: "auth.signout" });
       setAuth(response.auth);
+      setSyncStatus("pending");
       notifySuccess("Google Drive disconnected");
     } catch (error) {
       notifyError(error instanceof Error ? error.message : String(error));
@@ -372,6 +422,7 @@ function ContentShelfApp() {
   onMount(() => {
     void initialize().catch((error) => {
       notifyError(error instanceof Error ? error.message : String(error));
+      setReady(true);
     });
 
     const saveTimer = window.setInterval(() => {
@@ -384,7 +435,13 @@ function ContentShelfApp() {
 
     const syncTimer = window.setInterval(() => {
       const nextSettings = settings();
-      if (!document.hidden && nextSettings.autoSyncEnabled && nextSettings.syncMode === "auto") {
+      const signedIn = auth().signedIn;
+      if (
+        !document.hidden &&
+        signedIn &&
+        nextSettings.autoSyncEnabled &&
+        nextSettings.syncMode === "auto"
+      ) {
         void runSync("sync.auto");
       }
     }, AUTO_SYNC_TICK_MS);
@@ -410,37 +467,45 @@ function ContentShelfApp() {
     <>
       <Toaster />
 
-      <div class="style-vega fixed right-4 top-4 z-[2147483647] flex items-center gap-2">
-        <Show when={!panelOpen()}>
-          <Button onClick={() => setPanelOpen(true)} size="sm" variant="secondary">
-            <Menu class="size-4" />
-            Shelf
-          </Button>
-        </Show>
+      <div class="style-vega fixed right-[68px] bottom-4 z-[2147483647] flex items-center gap-2">
+        <Button
+          aria-label={panelOpen() ? "Collapse library" : "Open library"}
+          size="icon-lg"
+          variant="secondary"
+          onClick={() => setPanelOpen((open) => !open)}
+        >
+          <Show when={panelOpen()}>
+            <X class="size-5" />
+          </Show>
+          <Show when={!panelOpen()}>
+            <Library class="size-5" />
+          </Show>
+        </Button>
       </div>
 
       <aside
-        class="style-vega fixed right-4 top-4 z-[2147483647] h-[calc(100vh-2rem)] w-[360px] rounded-xl border bg-background/95 p-3 shadow-xl backdrop-blur transition-transform"
-        classList={{ "translate-x-[420px]": !panelOpen() }}
+        class="style-vega fixed right-4 top-4 z-[2147483646] h-[calc(100vh-2rem)] w-[360px] rounded-xl border border-border bg-background p-3 shadow-xl transition-all"
+        classList={{ "translate-x-[400px] opacity-0": !panelOpen() }}
       >
         <header class="mb-3 flex items-center justify-between gap-2">
           <div>
-            <h2 class="text-sm font-semibold">Excalidraw Shelf</h2>
-            <p class="text-muted-foreground text-xs">Last sync {formatRelativeTime(syncState().lastSyncAt)}</p>
+            <h2 class="text-sm font-semibold">Excalib</h2>
+            <p class="text-muted-foreground text-xs">
+              Last sync {formatRelativeTime(syncState().lastSyncAt)}
+            </p>
           </div>
 
           <div class="flex items-center gap-2">
             <Badge variant={syncBadgeVariant(syncStatus())}>{syncStatus()}</Badge>
-            <Button aria-label="Close panel" onClick={() => setPanelOpen(false)} size="icon-sm" variant="ghost">
-              <Menu class="size-4" />
-            </Button>
           </div>
         </header>
 
         <Show
           when={ready()}
           fallback={
-            <div class="flex h-full items-center justify-center text-sm text-muted-foreground">Loading shelf...</div>
+            <div class="flex h-full items-center justify-center text-sm text-muted-foreground">
+              Loading shelf...
+            </div>
           }
         >
           <Tabs class="flex h-[calc(100%-3.5rem)] flex-col gap-2" defaultValue="scenes">
@@ -457,7 +522,11 @@ function ContentShelfApp() {
                   placeholder="New scene title"
                   value={newSceneTitle()}
                 />
-                <Button disabled={Boolean(busy())} onClick={() => void handleCreateScene()} size="icon-sm">
+                <Button
+                  disabled={Boolean(busy())}
+                  onClick={() => void handleCreateScene()}
+                  size="icon-sm"
+                >
                   <Plus class="size-4" />
                   <span class="sr-only">Create scene</span>
                 </Button>
@@ -481,7 +550,9 @@ function ContentShelfApp() {
                         type="button"
                       >
                         <p class="truncate font-medium">{scene.title}</p>
-                        <p class="text-muted-foreground text-xs">Updated {formatRelativeTime(scene.updatedAt)}</p>
+                        <p class="text-muted-foreground text-xs">
+                          Updated {formatRelativeTime(scene.updatedAt)}
+                        </p>
                       </button>
 
                       <Button
@@ -521,7 +592,9 @@ function ContentShelfApp() {
                     <div class="flex items-center gap-2 rounded-md border px-2">
                       <div class={`min-w-0 flex-1 ${densityClass()}`}>
                         <p class="truncate font-medium">{scene.title}</p>
-                        <p class="text-muted-foreground text-xs">Deleted {formatRelativeTime(scene.deletedAt)}</p>
+                        <p class="text-muted-foreground text-xs">
+                          Deleted {formatRelativeTime(scene.deletedAt)}
+                        </p>
                       </div>
 
                       <Button
@@ -632,7 +705,9 @@ function ContentShelfApp() {
           </Tabs>
         </Show>
 
-        <div class="pointer-events-none absolute bottom-3 right-3 text-xs text-muted-foreground">v1</div>
+        <div class="pointer-events-none absolute bottom-3 right-3 text-xs text-muted-foreground">
+          v1
+        </div>
 
         <Show when={busy() === "sync"}>
           <div class="pointer-events-none absolute inset-0 rounded-xl bg-background/30" />

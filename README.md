@@ -1,9 +1,9 @@
-# Excalidraw Shelf
+# Excalib
 
 Chrome extension for Excalidraw Free users that adds:
 
 - Multi-scene management (create, open, rename, soft-delete, restore, purge)
-- Scene shelf sidebar injected into `excalidraw.com` / `app.excalidraw.com`
+- Scene library sidebar injected into `excalidraw.com` / `app.excalidraw.com`
 - Google Drive sync (manual and automatic intervals)
 - Local conflict backups and trash retention
 - Popup + options controls for sync/auth/settings
@@ -60,7 +60,7 @@ pnpm dev
   - Runtime message protocol dispatcher
   - Auto-sync alarm scheduler
 - Content script
-  - Shadow-root mounted Shelf sidebar UI
+  - Shadow-root mounted library sidebar UI
   - Excalidraw data bridge for local storage + files IndexedDB snapshot/apply
   - Autosave and auto-sync tick when tab is active
 - Popup + options
@@ -70,5 +70,5 @@ pnpm dev
 ## Notes
 
 - Switching scenes applies the selected payload, then reloads the Excalidraw tab to ensure the app consumes the updated local data.
-- Sync uses a manifest file (`manifest.json`) inside a Drive folder named `Excalidraw Shelf`.
+- Sync uses a manifest file (`manifest.json`) inside a Drive folder named `Excalib`.
 - Scene delete is soft-delete first (Trash). Purge permanently removes local scene and backups.

@@ -21,7 +21,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/src/components/ui";
-import { initShelf, runShelfSync, signInShelf, signOutShelf, updateShelfSettings } from "@/src/shared/client";
+import {
+  initShelf,
+  runShelfSync,
+  signInShelf,
+  signOutShelf,
+  updateShelfSettings,
+} from "@/src/shared/client";
 import type { SceneRecord, SyncStatus } from "@/src/shared/types";
 import { confirmConflictOverwrite } from "@/src/shared/ui/confirm";
 import { notifyError, notifySuccess, notifySyncStatus } from "@/src/shared/ui/notifications";
@@ -83,8 +89,14 @@ function App() {
   const [currentSceneId, setCurrentSceneId] = createSignal("");
   const [scenes, setScenes] = createSignal<SceneRecord[]>([]);
 
-  const visibleScenes = createMemo(() => scenes().filter((scene) => scene.deletedAt === null).slice(0, 6));
-  const currentScene = createMemo(() => scenes().find((scene) => scene.id === currentSceneId()) ?? null);
+  const visibleScenes = createMemo(() =>
+    scenes()
+      .filter((scene) => scene.deletedAt === null)
+      .slice(0, 6),
+  );
+  const currentScene = createMemo(
+    () => scenes().find((scene) => scene.id === currentSceneId()) ?? null,
+  );
 
   const refresh = async () => {
     const init = await initShelf();
@@ -208,7 +220,15 @@ function App() {
         </div>
 
         <div class="flex items-center gap-1">
-          <Badge variant={syncStatus() === "error" ? "destructive" : syncStatus() === "synced" ? "default" : "secondary"}>
+          <Badge
+            variant={
+              syncStatus() === "error"
+                ? "destructive"
+                : syncStatus() === "synced"
+                  ? "default"
+                  : "secondary"
+            }
+          >
             {syncStatus()}
           </Badge>
 
@@ -225,8 +245,15 @@ function App() {
                 Open Excalidraw
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <Show when={authSignedIn()} fallback={<DropdownMenuItem onSelect={() => void connect()}>Connect Drive</DropdownMenuItem>}>
-                <DropdownMenuItem onSelect={() => setConfirmSignOutOpen(true)}>Disconnect Drive</DropdownMenuItem>
+              <Show
+                when={authSignedIn()}
+                fallback={
+                  <DropdownMenuItem onSelect={() => void connect()}>Connect Drive</DropdownMenuItem>
+                }
+              >
+                <DropdownMenuItem onSelect={() => setConfirmSignOutOpen(true)}>
+                  Disconnect Drive
+                </DropdownMenuItem>
               </Show>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -237,10 +264,20 @@ function App() {
         <section class="mb-3 grid grid-cols-[1fr_auto] items-center gap-2 rounded-lg border p-2">
           <div>
             <p class="text-sm font-medium">Google Drive</p>
-            <p class="text-muted-foreground text-xs">{authSignedIn() ? "Connected" : "Not connected"}</p>
+            <p class="text-muted-foreground text-xs">
+              {authSignedIn() ? "Connected" : "Not connected"}
+            </p>
           </div>
 
-          <Show when={authSignedIn()} fallback={<Button onClick={() => void connect()} size="sm"><User class="size-4" />Connect</Button>}>
+          <Show
+            when={authSignedIn()}
+            fallback={
+              <Button onClick={() => void connect()} size="sm">
+                <User class="size-4" />
+                Connect
+              </Button>
+            }
+          >
             <Button onClick={() => setConfirmSignOutOpen(true)} size="sm" variant="outline">
               Disconnect
             </Button>
@@ -252,19 +289,30 @@ function App() {
             <p class="text-sm font-medium">Auto sync</p>
             <p class="text-muted-foreground text-xs">Background alarm + active tab tick</p>
           </div>
-          <Switch checked={autoSyncEnabled()} onChange={(checked) => void toggleAutoSync(checked)} />
+          <Switch
+            checked={autoSyncEnabled()}
+            onChange={(checked) => void toggleAutoSync(checked)}
+          />
         </section>
 
         <section class="mb-3 flex items-center gap-2">
           <Tooltip>
-            <TooltipTrigger as={Button} disabled={Boolean(busy())} onClick={() => void runSyncNow()}>
+            <TooltipTrigger
+              as={Button}
+              disabled={Boolean(busy())}
+              onClick={() => void runSyncNow()}
+            >
               <FolderSync class="size-4" />
               Sync now
             </TooltipTrigger>
             <TooltipContent>Runs immediate sync with Google Drive.</TooltipContent>
           </Tooltip>
 
-          <Button disabled={Boolean(busy())} onClick={() => void focusExcalidrawTab()} variant="outline">
+          <Button
+            disabled={Boolean(busy())}
+            onClick={() => void focusExcalidrawTab()}
+            variant="outline"
+          >
             <ExternalLink class="size-4" />
             Open Excalidraw
           </Button>
@@ -272,7 +320,10 @@ function App() {
 
         <section class="space-y-1">
           <p class="text-sm font-medium">Recent scenes</p>
-          <For each={visibleScenes()} fallback={<p class="text-muted-foreground text-xs">No scenes captured yet.</p>}>
+          <For
+            each={visibleScenes()}
+            fallback={<p class="text-muted-foreground text-xs">No scenes captured yet.</p>}
+          >
             {(scene) => (
               <div class="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
                 <span class="max-w-[200px] truncate">{scene.title}</span>

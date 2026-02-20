@@ -26,8 +26,19 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/src/components/ui";
-import { initShelf, runShelfSync, signInShelf, signOutShelf, updateShelfSettings } from "@/src/shared/client";
-import { DEFAULT_SETTINGS, type SceneRecord, type SyncStatus, type UiDensity } from "@/src/shared/types";
+import {
+  initShelf,
+  runShelfSync,
+  signInShelf,
+  signOutShelf,
+  updateShelfSettings,
+} from "@/src/shared/client";
+import {
+  DEFAULT_SETTINGS,
+  type SceneRecord,
+  type SyncStatus,
+  type UiDensity,
+} from "@/src/shared/types";
 import { confirmConflictOverwrite } from "@/src/shared/ui/confirm";
 import { notifyError, notifySuccess, notifySyncStatus } from "@/src/shared/ui/notifications";
 
@@ -80,7 +91,9 @@ function App() {
   const [lastSyncAt, setLastSyncAt] = createSignal<number | null>(null);
 
   const syncStatus = createMemo(() => statusFromState(lastError(), lastSyncAt()));
-  const dirtyCurrentScene = createMemo(() => scenes().find((scene) => scene.id === currentSceneId()) ?? null);
+  const dirtyCurrentScene = createMemo(
+    () => scenes().find((scene) => scene.id === currentSceneId()) ?? null,
+  );
 
   const loadState = async () => {
     const init = await initShelf();
@@ -186,15 +199,28 @@ function App() {
         <header class="flex items-start justify-between gap-4">
           <div>
             <h1 class="text-2xl font-semibold">Excalidraw Shelf Settings</h1>
-            <p class="text-muted-foreground text-sm">Control scene sync, retention policy, and sidebar density.</p>
+            <p class="text-muted-foreground text-sm">
+              Control scene sync, retention policy, and sidebar density.
+            </p>
           </div>
-          <Badge variant={syncStatus() === "error" ? "destructive" : syncStatus() === "synced" ? "default" : "secondary"}>
+          <Badge
+            variant={
+              syncStatus() === "error"
+                ? "destructive"
+                : syncStatus() === "synced"
+                  ? "default"
+                  : "secondary"
+            }
+          >
             <span class="mr-1 inline-flex">{iconForSyncStatus(syncStatus())}</span>
             {syncStatus()}
           </Badge>
         </header>
 
-        <Show when={ready()} fallback={<p class="text-muted-foreground">Loading extension state...</p>}>
+        <Show
+          when={ready()}
+          fallback={<p class="text-muted-foreground">Loading extension state...</p>}
+        >
           <Tabs class="gap-4" defaultValue="sync">
             <TabsList>
               <TabsTrigger value="sync">Sync</TabsTrigger>
@@ -254,7 +280,10 @@ function App() {
                     optionTextValue="label"
                     optionValue="value"
                     options={syncModeOptions}
-                    value={syncModeOptions.find((option) => option.value === settings().syncMode) ?? syncModeOptions[0]}
+                    value={
+                      syncModeOptions.find((option) => option.value === settings().syncMode) ??
+                      syncModeOptions[0]
+                    }
                   >
                     <SelectTrigger class="w-full">
                       <SelectValue>
@@ -314,7 +343,10 @@ function App() {
                     optionTextValue="label"
                     optionValue="value"
                     options={densityOptions}
-                    value={densityOptions.find((option) => option.value === settings().uiDensity) ?? densityOptions[0]}
+                    value={
+                      densityOptions.find((option) => option.value === settings().uiDensity) ??
+                      densityOptions[0]
+                    }
                   >
                     <SelectTrigger class="w-full">
                       <SelectValue>
@@ -376,7 +408,9 @@ function App() {
                   </SheetHeader>
 
                   <div class="mt-4 space-y-2 text-sm">
-                    <p>1. Create OAuth client in Google Cloud Console (Chrome extension app type).</p>
+                    <p>
+                      1. Create OAuth client in Google Cloud Console (Chrome extension app type).
+                    </p>
                     <p>2. Grant Drive API and scope `drive.file`.</p>
                     <p>3. Set the env var and rebuild with `pnpm dev` or `pnpm build`.</p>
                   </div>
@@ -397,7 +431,11 @@ function App() {
                 </div>
 
                 <div class="space-y-1">
-                  <For each={scenes().filter((scene) => scene.deletedAt === null).slice(0, 12)}>
+                  <For
+                    each={scenes()
+                      .filter((scene) => scene.deletedAt === null)
+                      .slice(0, 12)}
+                  >
                     {(scene) => (
                       <div class="flex items-center justify-between rounded-md border px-2 py-2 text-sm">
                         <span class="truncate">{scene.title}</span>
