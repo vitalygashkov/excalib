@@ -6,7 +6,7 @@ const oauthClientId = process.env.WXT_GOOGLE_OAUTH_CLIENT_ID;
 export default defineConfig({
   modules: ["@wxt-dev/module-solid"],
   manifest: {
-    name: "Excalib",
+    name: "Excalidraw Shelf",
     description: "Manage multiple Excalidraw scenes and sync with Google Drive.",
     permissions: ["storage", "identity", "alarms"],
     host_permissions: [

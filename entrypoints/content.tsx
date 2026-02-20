@@ -493,7 +493,7 @@ function ContentShelfApp() {
       >
         <header class="mb-3 flex items-center justify-between gap-2">
           <div>
-            <h2 class="text-sm font-semibold">Excalib</h2>
+            <h2 class="text-sm font-semibold">Shelf</h2>
             <p class="text-muted-foreground text-xs">
               Last sync {formatRelativeTime(syncState().lastSyncAt)}
             </p>

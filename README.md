@@ -1,4 +1,4 @@
-# Excalib
+# Excalidraw Shelf
 
 Chrome extension for Excalidraw Free users that adds:
 
@@ -70,5 +70,5 @@ pnpm dev
 ## Notes
 
 - Switching scenes applies the selected payload, then reloads the Excalidraw tab to ensure the app consumes the updated local data.
-- Sync uses a manifest file (`manifest.json`) inside a Drive folder named `Excalib`.
+- Sync uses a manifest file (`manifest.json`) inside a Drive folder named `Excalidraw Shelf`.
 - Scene delete is soft-delete first (Trash). Purge permanently removes local scene and backups.
