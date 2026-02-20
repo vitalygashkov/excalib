@@ -113,7 +113,7 @@ function ContentShelfApp() {
   const [currentSceneId, setCurrentSceneId] = createSignal<string>("");
   const [newSceneTitle, setNewSceneTitle] = createSignal("");
   const [busy, setBusy] = createSignal<string | null>(null);
-  const [syncStatus, setSyncStatus] = createSignal<SyncStatus>("pending");
+  const [syncStatus, setSyncStatus] = createSignal<SyncStatus>("offline");
 
   const sceneRows = createMemo(() => scenes().filter((scene) => scene.deletedAt === null));
   const trashRows = createMemo(() => scenes().filter((scene) => scene.deletedAt !== null));
@@ -146,10 +146,13 @@ function ContentShelfApp() {
       setScenes(sortScenes(response.scenes));
       setCurrentSceneId(response.currentSceneId);
 
+      console.log("initialize", response);
       if (response.syncState.lastError) {
         setSyncStatus("error");
       } else if (response.syncState.lastSyncAt) {
         setSyncStatus("synced");
+      } else if (!response.auth.signedIn) {
+        setSyncStatus("offline");
       } else {
         setSyncStatus("pending");
       }
@@ -173,7 +176,7 @@ function ContentShelfApp() {
         setSettings(settingsResult.value.settings);
       }
 
-      setSyncStatus("pending");
+      setSyncStatus("offline");
     } finally {
       setReady(true);
     }
@@ -395,6 +398,7 @@ function ContentShelfApp() {
     try {
       const response = await sendShelfMessage<{ auth: AuthState }>({ type: "auth.signin" });
       setAuth(response.auth);
+      console.log("handleSignIn", response);
       setSyncStatus("pending");
       notifySuccess("Google Drive connected");
     } catch (error) {
@@ -414,6 +418,7 @@ function ContentShelfApp() {
     try {
       const response = await sendShelfMessage<{ auth: AuthState }>({ type: "auth.signout" });
       setAuth(response.auth);
+      console.log("handleSignOut", response);
       setSyncStatus("pending");
       notifySuccess("Google Drive disconnected");
     } catch (error) {
