@@ -5,7 +5,6 @@ import {
   FolderSync,
   LogIn,
   LogOut,
-  Menu,
   PenLine,
   Plus,
   RefreshCw,
@@ -484,7 +483,7 @@ function ContentShelfApp() {
       </div>
 
       <aside
-        class="style-vega fixed right-4 top-4 z-[2147483646] h-[calc(100vh-2rem)] w-[360px] rounded-xl border border-border bg-background p-3 shadow-xl transition-all"
+        class="style-vega fixed right-0 top-0 bottom-0 z-[2147483646] h-screen w-[360px] border border-border bg-background p-3 shadow-xl"
         classList={{ "translate-x-[400px] opacity-0": !panelOpen() }}
       >
         <header class="mb-3 flex items-center justify-between gap-2">
