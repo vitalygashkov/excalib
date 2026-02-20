@@ -154,7 +154,7 @@
 }
 
 .z-button-variant-secondary {
-  @apply border border-primary-foreground bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground aria-expanded:bg-secondary aria-expanded:text-secondary-foreground;
+  @apply border border-primary-foreground bg-secondary text-secondary-foreground hover:bg-primary-foreground aria-expanded:bg-secondary aria-expanded:text-secondary-foreground;
 }
 
 .z-button-variant-ghost {
