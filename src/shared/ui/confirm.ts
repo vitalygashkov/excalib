@@ -41,7 +41,7 @@ export function confirmSceneDelete(sceneId: string) {
     intent: "scene-delete",
     sceneId,
     title: "Delete scene?",
-    description: "This scene will move to Trash and can be restored within 30 days.",
+    description: "This scene will move to Archive and can be restored within 30 days.",
     confirmLabel: "Delete",
     cancelLabel: "Cancel",
     destructive: true,

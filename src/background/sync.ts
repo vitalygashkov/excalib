@@ -50,7 +50,7 @@ function buildManifestScene(local: {
 
 export async function runSync(mode: "auto" | "manual") {
   const settings = await getSettings();
-  await cleanupDeletedScenes(settings.trashRetentionDays);
+  await cleanupDeletedScenes(settings.archiveRetentionDays);
 
   const token = await getAuthToken(mode === "manual");
 

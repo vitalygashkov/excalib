@@ -183,7 +183,7 @@ export async function ensureShelfFolder(token: string, cachedFolderId: string | 
 
   const matches = await queryFiles(
     token,
-    `mimeType='application/vnd.google-apps.folder' and trashed=false and name='${SHELF_FOLDER_NAME}'`,
+    `mimeType='application/vnd.google-apps.folder' and archived=false and name='${SHELF_FOLDER_NAME}'`,
   );
 
   if (matches[0]?.id) {
@@ -253,7 +253,7 @@ export async function ensureManifest(
 
   const matches = await queryFiles(
     token,
-    `trashed=false and name='${SHELF_MANIFEST_NAME}' and '${folderId}' in parents`,
+    `archived=false and name='${SHELF_MANIFEST_NAME}' and '${folderId}' in parents`,
   );
 
   if (matches[0]?.id) {

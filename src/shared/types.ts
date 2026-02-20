@@ -61,7 +61,7 @@ export interface ExtensionSettings {
   autoSyncIntervalMinutes: number;
   backupRetention: number;
   syncMode: SyncMode;
-  trashRetentionDays: number;
+  archiveRetentionDays: number;
   uiDensity: UiDensity;
 }
 
@@ -82,7 +82,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   autoSyncIntervalMinutes: 5,
   backupRetention: 3,
   syncMode: "auto",
-  trashRetentionDays: 30,
+  archiveRetentionDays: 30,
   uiDensity: "comfortable",
 };
 

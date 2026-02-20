@@ -4,6 +4,7 @@ import type {
   SceneCurrentResponse,
   SceneListResponse,
   SceneMutationResponse,
+  SceneOpenResponse,
   SettingsResponse,
   SyncResponse,
 } from "@/src/shared/protocol";
@@ -44,6 +45,10 @@ export function purgeShelfScene(sceneId: string) {
 
 export function saveShelfScene(sceneId: string, payload: ScenePayload) {
   return sendShelfMessage<SceneMutationResponse>({ payload, sceneId, type: "scene.capture-current" });
+}
+
+export function openShelfScene(sceneId: string) {
+  return sendShelfMessage<SceneOpenResponse>({ sceneId, type: "scene.open" });
 }
 
 export function getShelfSettings() {
