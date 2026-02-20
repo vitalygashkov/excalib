@@ -8,6 +8,7 @@ interface ArchiveTabProps {
   busy: Accessor<string | null>;
   densityClass: Accessor<string>;
   archiveRows: Accessor<SceneRecord[]>;
+  onClearArchive: () => void;
   onPurgeScene: (scene: SceneRecord) => void;
   onRestoreScene: (sceneId: string) => void;
 }
@@ -15,6 +16,17 @@ interface ArchiveTabProps {
 export function ArchiveTab(props: ArchiveTabProps) {
   return (
     <TabsContent class="flex min-h-0 flex-1 flex-col gap-2" value="archive">
+      <div class="flex justify-end">
+        <Button
+          disabled={Boolean(props.busy()) || props.archiveRows().length === 0}
+          onClick={props.onClearArchive}
+          size="sm"
+          variant="destructive"
+        >
+          Clear archive
+        </Button>
+      </div>
+
       <div class="no-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
         <For
           each={props.archiveRows()}

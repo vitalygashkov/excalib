@@ -12,12 +12,22 @@ interface ScenesTabProps {
   sceneRows: Accessor<SceneRecord[]>;
   setNewSceneTitle: Setter<string>;
   onCreateScene: () => void;
+  onArchiveOtherScenes: () => void;
   onDeleteScene: (scene: SceneRecord) => void;
   onOpenScene: (sceneId: string) => void;
   onRenameScene: (scene: SceneRecord) => void;
 }
 
 export function ScenesTab(props: ScenesTabProps) {
+  const canArchiveOthers = () => {
+    const currentId = props.currentSceneId();
+    if (!currentId) {
+      return false;
+    }
+
+    return props.sceneRows().some((scene) => scene.id !== currentId);
+  };
+
   return (
     <TabsContent class="flex min-h-0 flex-1 flex-col gap-2" value="scenes">
       <div class="flex gap-2">
@@ -29,6 +39,17 @@ export function ScenesTab(props: ScenesTabProps) {
         <Button disabled={Boolean(props.busy())} onClick={props.onCreateScene} size="icon-sm">
           <Plus class="size-4" />
           <span class="sr-only">Create scene</span>
+        </Button>
+      </div>
+
+      <div class="flex justify-end">
+        <Button
+          disabled={Boolean(props.busy()) || !canArchiveOthers()}
+          onClick={props.onArchiveOtherScenes}
+          size="sm"
+          variant="outline"
+        >
+          Archive other scenes
         </Button>
       </div>
 

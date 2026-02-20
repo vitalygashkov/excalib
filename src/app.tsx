@@ -72,6 +72,7 @@ export function App() {
               currentSceneId={controller.currentSceneId}
               densityClass={controller.densityClass}
               newSceneTitle={controller.newSceneTitle}
+              onArchiveOtherScenes={() => void controller.archiveOtherScenes()}
               onCreateScene={() => void controller.createScene()}
               onDeleteScene={(scene) => void controller.deleteScene(scene)}
               onOpenScene={(sceneId) => void controller.openScene(sceneId)}
@@ -83,6 +84,7 @@ export function App() {
             <ArchiveTab
               busy={controller.busy}
               densityClass={controller.densityClass}
+              onClearArchive={() => void controller.clearArchive()}
               onPurgeScene={(scene) => void controller.purgeScene(scene)}
               onRestoreScene={(sceneId) => void controller.restoreScene(sceneId)}
               archiveRows={controller.archiveRows}

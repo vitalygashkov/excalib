@@ -42,8 +42,10 @@ import {
 } from "./utils";
 
 export interface ShelfController {
+  archiveOtherScenes: () => Promise<void>;
   auth: Accessor<AuthState>;
   busy: Accessor<string | null>;
+  clearArchive: () => Promise<void>;
   currentSceneId: Accessor<string>;
   currentSceneName: Accessor<string>;
   densityClass: Accessor<string>;
@@ -240,6 +242,55 @@ export function useShelfController(): ShelfController {
     }
   };
 
+  const archiveOtherScenes = async () => {
+    const currentId = currentSceneId();
+    if (!currentId) {
+      return;
+    }
+
+    const targets = sceneRows().filter((scene) => scene.id !== currentId);
+    if (targets.length === 0) {
+      return;
+    }
+
+    const accepted = window.confirm(
+      `Archive other scenes?\n\nThis will move ${targets.length} scene(s) to Archive. Current scene will be kept.`,
+    );
+    if (!accepted) {
+      return;
+    }
+
+    setBusy("archive-others");
+
+    try {
+      const results = await Promise.allSettled(targets.map((scene) => deleteShelfScene(scene.id)));
+      const movedScenes: SceneRecord[] = [];
+      let failed = 0;
+
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          movedScenes.push(result.value.scene);
+        } else {
+          failed += 1;
+        }
+      }
+
+      if (movedScenes.length > 0) {
+        setScenes((prev) => movedScenes.reduce((next, scene) => upsertScene(next, scene), prev));
+      }
+
+      if (failed === 0) {
+        notifySuccess(`Moved ${movedScenes.length} scene(s) to Archive`);
+      } else {
+        notifyError(`Archived ${movedScenes.length} scene(s), ${failed} failed`);
+      }
+    } catch (error) {
+      notifyError(toErrorMessage(error));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const purgeScene = async (scene: SceneRecord) => {
     const accepted = window.confirm(`Permanently delete "${scene.title}"?`);
     if (!accepted) {
@@ -252,6 +303,50 @@ export function useShelfController(): ShelfController {
       await purgeShelfScene(scene.id);
       setScenes((prev) => prev.filter((entry) => entry.id !== scene.id));
       notifySuccess(`Deleted ${scene.title}`);
+    } catch (error) {
+      notifyError(toErrorMessage(error));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const clearArchive = async () => {
+    const targets = archiveRows();
+    if (targets.length === 0) {
+      return;
+    }
+
+    const accepted = window.confirm(
+      `Clear archive?\n\nThis will permanently delete ${targets.length} archived scene(s). This cannot be undone.`,
+    );
+    if (!accepted) {
+      return;
+    }
+
+    setBusy("clear-archive");
+
+    try {
+      const results = await Promise.allSettled(targets.map((scene) => purgeShelfScene(scene.id)));
+      const deletedIds = new Set<string>();
+      let failed = 0;
+
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          deletedIds.add(targets[index].id);
+        } else {
+          failed += 1;
+        }
+      });
+
+      if (deletedIds.size > 0) {
+        setScenes((prev) => prev.filter((entry) => !deletedIds.has(entry.id)));
+      }
+
+      if (failed === 0) {
+        notifySuccess(`Cleared ${deletedIds.size} archived scene(s)`);
+      } else {
+        notifyError(`Deleted ${deletedIds.size} archived scene(s), ${failed} failed`);
+      }
     } catch (error) {
       notifyError(toErrorMessage(error));
     } finally {
@@ -408,8 +503,10 @@ export function useShelfController(): ShelfController {
   });
 
   return {
+    archiveOtherScenes,
     auth,
     busy,
+    clearArchive,
     createScene,
     currentSceneId,
     currentSceneName,
