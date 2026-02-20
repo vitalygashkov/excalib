@@ -126,6 +126,15 @@ function ContentShelfApp() {
     notifySyncStatus(status);
   };
 
+  const parsePositiveInteger = (raw: string) => {
+    const value = Number(raw);
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+
+    return Math.max(1, Math.floor(value));
+  };
+
   const refreshScenes = async () => {
     const response = await sendShelfMessage<SceneListResponse>({
       includeDeleted: true,
@@ -139,16 +148,13 @@ function ContentShelfApp() {
 
   const initialize = async () => {
     try {
-      console.log("initialize");
       const response = await sendShelfMessage<InitResponse>({ type: "init" });
-      console.log("initialize", response);
       setSettings(response.settings);
       setSyncState(response.syncState);
       setAuth(response.auth);
       setScenes(sortScenes(response.scenes));
       setCurrentSceneId(response.currentSceneId);
 
-      console.log("initialize", response);
       if (response.syncState.lastError) {
         setSyncStatus("error");
       } else if (response.syncState.lastSyncAt) {
@@ -165,8 +171,6 @@ function ContentShelfApp() {
         sendShelfMessage<SceneCurrentResponse>({ type: "scene.current" }),
         sendShelfMessage<SettingsResponse>({ type: "settings.get" }),
       ]);
-      console.log("initialize", { sceneResult, currentResult, settingsResult });
-
       if (sceneResult.status === "fulfilled") {
         setScenes(sortScenes(sceneResult.value.scenes));
       }
@@ -230,15 +234,10 @@ function ContentShelfApp() {
 
     try {
       await saveCurrentScene();
-      console.log("sendShelfMessage", {
-        title: newSceneTitle().trim() || undefined,
-        type: "scene.create",
-      });
       const created = await sendShelfMessage<SceneMutationResponse>({
         title: newSceneTitle().trim() || undefined,
         type: "scene.create",
       });
-      console.log("created", created);
 
       setScenes((prev) => upsertScene(prev, created.scene));
       setNewSceneTitle("");
@@ -401,7 +400,6 @@ function ContentShelfApp() {
     try {
       const response = await sendShelfMessage<{ auth: AuthState }>({ type: "auth.signin" });
       setAuth(response.auth);
-      console.log("handleSignIn", response);
       setSyncStatus("pending");
       notifySuccess("Google Drive connected");
     } catch (error) {
@@ -421,7 +419,6 @@ function ContentShelfApp() {
     try {
       const response = await sendShelfMessage<{ auth: AuthState }>({ type: "auth.signout" });
       setAuth(response.auth);
-      console.log("handleSignOut", response);
       setSyncStatus("pending");
       notifySuccess("Google Drive disconnected");
     } catch (error) {
@@ -432,8 +429,6 @@ function ContentShelfApp() {
   };
 
   onMount(() => {
-    console.log("onMount");
-
     initialize().catch((error) => {
       notifyError(error instanceof Error ? error.message : String(error));
       setReady(true);
@@ -539,7 +534,7 @@ function ContentShelfApp() {
             <TabsList class="grid w-full grid-cols-3" variant="line">
               <TabsTrigger value="scenes">Scenes</TabsTrigger>
               <TabsTrigger value="trash">Trash</TabsTrigger>
-              <TabsTrigger value="settings">Sync</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
             <TabsContent class="flex min-h-0 flex-1 flex-col gap-2" value="scenes">
@@ -652,66 +647,169 @@ function ContentShelfApp() {
             </TabsContent>
 
             <TabsContent class="space-y-3" value="settings">
-              <div class="grid grid-cols-[1fr_auto] items-center gap-2 rounded-md border p-2">
-                <div>
-                  <p class="text-sm font-medium">Auto sync</p>
-                  <p class="text-muted-foreground text-xs">Use alarm + live tab checks</p>
+              <div class="space-y-3 rounded-md border p-2">
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <p class="text-sm font-medium">Google Drive sync</p>
+                    <p class="text-muted-foreground text-xs">
+                      Scenes stay local by default. Connect Drive for cloud sync.
+                    </p>
+                  </div>
+                  <Badge variant={auth().signedIn ? "default" : "secondary"}>
+                    {auth().signedIn ? "Connected" : "Local only"}
+                  </Badge>
                 </div>
-                <Switch
-                  checked={settings().autoSyncEnabled}
-                  onChange={(checked) => {
-                    void updateExtensionSettings({ autoSyncEnabled: checked });
-                  }}
-                />
+
+                <div class="grid grid-cols-2 gap-2">
+                  <Button disabled={Boolean(busy())} onClick={() => void runSync("sync.manual")}>
+                    <FolderSync class="size-4" />
+                    Sync now
+                  </Button>
+
+                  <Button
+                    disabled={Boolean(busy())}
+                    onClick={() => {
+                      if (auth().signedIn) {
+                        void handleSignOut();
+                        return;
+                      }
+                      void handleSignIn();
+                    }}
+                    variant="outline"
+                  >
+                    <Show when={auth().signedIn} fallback={<LogIn class="size-4" />}>
+                      <LogOut class="size-4" />
+                    </Show>
+                    {auth().signedIn ? "Sign out" : "Sign in"}
+                  </Button>
+                </div>
+
+                <div class="grid grid-cols-[1fr_auto] items-center gap-2 rounded-md border p-2">
+                  <div>
+                    <p class="text-sm font-medium">Auto sync</p>
+                    <p class="text-muted-foreground text-xs">
+                      Background alarm + active-tab checks
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings().autoSyncEnabled}
+                    onChange={(checked) => {
+                      void updateExtensionSettings({ autoSyncEnabled: checked });
+                    }}
+                  />
+                </div>
+
+                <div class="space-y-1 rounded-md border p-2">
+                  <p class="text-sm font-medium">Sync mode</p>
+                  <div class="grid grid-cols-2 gap-2">
+                    <Button
+                      disabled={Boolean(busy())}
+                      onClick={() => void updateExtensionSettings({ syncMode: "manual" })}
+                      variant={settings().syncMode === "manual" ? "default" : "outline"}
+                    >
+                      Manual
+                    </Button>
+                    <Button
+                      disabled={Boolean(busy())}
+                      onClick={() => void updateExtensionSettings({ syncMode: "auto" })}
+                      variant={settings().syncMode === "auto" ? "default" : "outline"}
+                    >
+                      Auto
+                    </Button>
+                  </div>
+                </div>
+
+                <div class="space-y-1 rounded-md border p-2">
+                  <label class="text-sm font-medium" for="sync-interval-input">
+                    Auto-sync interval (minutes)
+                  </label>
+                  <Input
+                    id="sync-interval-input"
+                    min="1"
+                    onChange={(event) => {
+                      const next = parsePositiveInteger(event.currentTarget.value);
+                      if (next === null) {
+                        return;
+                      }
+
+                      void updateExtensionSettings({ autoSyncIntervalMinutes: next });
+                    }}
+                    step="1"
+                    type="number"
+                    value={String(settings().autoSyncIntervalMinutes)}
+                  />
+                </div>
               </div>
 
-              <div class="space-y-1 rounded-md border p-2">
-                <label class="text-sm font-medium" for="sync-interval-input">
-                  Interval (minutes)
-                </label>
-                <Input
-                  id="sync-interval-input"
-                  min="1"
-                  onChange={(event) => {
-                    const next = Number(event.currentTarget.value);
-                    if (!Number.isFinite(next)) {
-                      return;
-                    }
-                    void updateExtensionSettings({ autoSyncIntervalMinutes: next });
-                  }}
-                  step="1"
-                  type="number"
-                  value={String(settings().autoSyncIntervalMinutes)}
-                />
-              </div>
+              <div class="space-y-3 rounded-md border p-2">
+                <p class="text-sm font-medium">Library settings</p>
 
-              <div class="grid grid-cols-2 gap-2">
-                <Button disabled={Boolean(busy())} onClick={() => void runSync("sync.manual")}>
-                  <FolderSync class="size-4" />
-                  Sync now
-                </Button>
+                <div class="space-y-1 rounded-md border p-2">
+                  <p class="text-sm font-medium">Scene row density</p>
+                  <div class="grid grid-cols-2 gap-2">
+                    <Button
+                      disabled={Boolean(busy())}
+                      onClick={() => void updateExtensionSettings({ uiDensity: "comfortable" })}
+                      variant={settings().uiDensity === "comfortable" ? "default" : "outline"}
+                    >
+                      Comfortable
+                    </Button>
+                    <Button
+                      disabled={Boolean(busy())}
+                      onClick={() => void updateExtensionSettings({ uiDensity: "compact" })}
+                      variant={settings().uiDensity === "compact" ? "default" : "outline"}
+                    >
+                      Compact
+                    </Button>
+                  </div>
+                </div>
 
-                <Button
-                  disabled={Boolean(busy())}
-                  onClick={() => {
-                    if (auth().signedIn) {
-                      void handleSignOut();
-                      return;
-                    }
-                    void handleSignIn();
-                  }}
-                  variant="outline"
-                >
-                  <Show when={auth().signedIn} fallback={<LogIn class="size-4" />}>
-                    <LogOut class="size-4" />
-                  </Show>
-                  {auth().signedIn ? "Sign out" : "Sign in"}
-                </Button>
+                <div class="space-y-1 rounded-md border p-2">
+                  <label class="text-sm font-medium" for="trash-retention-input">
+                    Trash retention (days)
+                  </label>
+                  <Input
+                    id="trash-retention-input"
+                    min="1"
+                    onChange={(event) => {
+                      const next = parsePositiveInteger(event.currentTarget.value);
+                      if (next === null) {
+                        return;
+                      }
+
+                      void updateExtensionSettings({ trashRetentionDays: next });
+                    }}
+                    step="1"
+                    type="number"
+                    value={String(settings().trashRetentionDays)}
+                  />
+                </div>
+
+                <div class="space-y-1 rounded-md border p-2">
+                  <label class="text-sm font-medium" for="backup-retention-input">
+                    Conflict backups to keep
+                  </label>
+                  <Input
+                    id="backup-retention-input"
+                    min="1"
+                    onChange={(event) => {
+                      const next = parsePositiveInteger(event.currentTarget.value);
+                      if (next === null) {
+                        return;
+                      }
+
+                      void updateExtensionSettings({ backupRetention: next });
+                    }}
+                    step="1"
+                    type="number"
+                    value={String(settings().backupRetention)}
+                  />
+                </div>
               </div>
 
               <div class="rounded-md border p-2 text-xs text-muted-foreground">
-                <p>Sync mode: {settings().syncMode}</p>
-                <p>Drive: {auth().signedIn ? "Connected" : "Not connected"}</p>
+                <p>Sync status: {syncStatus()}</p>
+                <p>Drive: {auth().signedIn ? "Connected" : "Local only"}</p>
                 <Show when={syncState().lastError}>
                   <p class="mt-1 text-destructive">{syncState().lastError}</p>
                 </Show>

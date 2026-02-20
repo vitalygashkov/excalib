@@ -8,6 +8,9 @@ export default defineConfig({
   manifest: {
     name: "Excalidraw Shelf",
     description: "Manage multiple Excalidraw scenes and sync with Google Drive.",
+    action: {
+      default_title: "Excalidraw Shelf",
+    },
     permissions: ["storage", "identity", "alarms"],
     host_permissions: [
       "https://excalidraw.com/*",

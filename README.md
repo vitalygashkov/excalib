@@ -6,7 +6,7 @@ Chrome extension for Excalidraw Free users that adds:
 - Scene library sidebar injected into `excalidraw.com` / `app.excalidraw.com`
 - Google Drive sync (manual and automatic intervals)
 - Local conflict backups and trash retention
-- Popup + options controls for sync/auth/settings
+- Single in-page settings surface (inside the injected sidebar)
 
 ## Stack
 
@@ -63,7 +63,6 @@ pnpm dev
   - Shadow-root mounted library sidebar UI
   - Excalidraw data bridge for local storage + files IndexedDB snapshot/apply
   - Autosave and auto-sync tick when tab is active
-- Popup + options
   - Auth, sync controls, and settings editing
   - Shared notification and confirm wrappers
 
