@@ -6,7 +6,9 @@
 :root,
 :host {
   --radius: 0.625rem;
-  --font-sans: "Inter Variable", sans-serif;
+  --font-sans:
+    Assistant, system-ui, BlinkMacSystemFont, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    sans-serif;
 
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
