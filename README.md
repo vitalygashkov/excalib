@@ -3,8 +3,8 @@
 Chrome extension for Excalidraw Free users that adds:
 
 - Multi-scene management (create, open, rename, soft-delete, restore, purge)
-- Google Drive sync (manual and automatic intervals)
 - Local conflict backups and archive retention
+- Google Drive sync (manual and automatic intervals) (experimental, expect nothing to work)
 
 > Excalib is an independent enhancement and is not officially affiliated with the Excalidraw project.
 
