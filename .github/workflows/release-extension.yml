@@ -1,0 +1,102 @@
+name: Release Extension Bundles
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSH_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          version="$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version)")"
+          expected_tag="v${version}"
+
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            if [[ "$PUSH_TAG" != "$expected_tag" ]]; then
+              echo "::error::Pushed tag '$PUSH_TAG' does not match package.json version '$version' (expected '$expected_tag')."
+              exit 1
+            fi
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if git ls-remote --exit-code --tags origin "refs/tags/$expected_tag" >/dev/null 2>&1; then
+              echo "Tag '$expected_tag' already exists on origin."
+            else
+              echo "::error::Tag '$expected_tag' does not exist on origin. Push the matching tag and retry workflow_dispatch."
+              exit 1
+            fi
+          else
+            echo "::error::Unsupported event '$EVENT_NAME'."
+            exit 1
+          fi
+
+          {
+            echo "version=$version"
+            echo "release_tag=$expected_tag"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout release tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.meta.outputs.release_tag }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Chrome zip bundle
+        run: pnpm zip
+
+      - name: Build Firefox zip bundle
+        run: pnpm zip:firefox
+
+      - name: Validate bundle files
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          chrome_bundle=".output/excalib-${VERSION}-chrome.zip"
+          firefox_bundle=".output/excalib-${VERSION}-firefox.zip"
+
+          [[ -f "$chrome_bundle" ]] || { echo "::error::Missing bundle: $chrome_bundle"; exit 1; }
+          [[ -f "$firefox_bundle" ]] || { echo "::error::Missing bundle: $firefox_bundle"; exit 1; }
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.release_tag }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          files: |
+            .output/excalib-${{ steps.meta.outputs.version }}-chrome.zip
+            .output/excalib-${{ steps.meta.outputs.version }}-firefox.zip

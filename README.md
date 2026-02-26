@@ -52,6 +52,26 @@ pnpm dev
 - `pnpm format` - run oxfmt
 - `pnpm typecheck` - TypeScript checks
 
+## Releases
+
+GitHub Releases are used to publish installable extension bundles for Chrome and Firefox.
+
+- Workflow: `Release Extension Bundles`
+- Auto trigger: push a version tag matching `package.json` version (`vX.Y.Z`)
+- Manual trigger: run `workflow_dispatch` (uses existing matching tag only)
+
+Release rules:
+
+- `package.json` version is authoritative
+- Pushed tag must exactly match `v${package.json.version}` or workflow fails
+- Manual runs use `v${package.json.version}`
+- If the matching tag is missing in a manual run, the workflow fails with instructions to push the tag first
+
+Published release assets:
+
+- `.output/excalib-<version>-chrome.zip`
+- `.output/excalib-<version>-firefox.zip`
+
 ## Main Architecture
 
 - Background service
