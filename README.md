@@ -1,93 +1,45 @@
 # Excalib
 
-Chrome extension for Excalidraw Free users that adds:
-
-- Multi-scene management (create, open, rename, soft-delete, restore, purge)
-- Local conflict backups and archive retention
-- Google Drive sync (manual and automatic intervals) (experimental, expect nothing to work)
+Excalib is a browser extension for Excalidraw users (primarily for Free users) that adds scene management features and optional Google Drive sync.
 
 > Excalib is an independent enhancement and is not officially affiliated with the Excalidraw project.
 
-## Stack
+## Features
 
-- TypeScript
-- [WXT](https://wxt.dev/) + SolidJS
-- Tailwind CSS v4
-- Zaidan-style local UI components
-- `solid-sonner` (toasts via shared notification wrappers)
-- `oxlint` + `oxfmt`
-- `vitest`
+- Multi-scene management (create, open, rename, archive, restore, purge)
+- Local conflict backups and archive retention
+- Google Drive sync (manual and interval sync) (experimental, expect nothing to work)
 
-## Setup
+## Install From GitHub Release
 
-1. Install dependencies:
+1. Download the latest `excalib-<version>-chrome.zip` (Firefox supported as well) from [Releases](https://github.com/vitalygashkov/excalib/releases).
+2. Unzip the file to a folder on your disk.
+3. Open `chrome://extensions/` in Chrome.
+4. Enable **Developer mode**.
+5. Click **Load unpacked**.
+6. Select the unzipped folder that contains `manifest.json`.
 
-```bash
-pnpm install
-```
+If Chrome rejects the extension folder, you likely selected the `.zip` directly or picked the wrong directory level.
 
-2. Configure Google OAuth client ID (required for Drive sync):
+## Permissions
 
-Create `.env.local` in project root:
+Excalib requests:
 
-```bash
-WXT_GOOGLE_OAUTH_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
-```
+- `storage`: persist extension settings and scene metadata.
+- `identity`: Google OAuth sign-in for Drive sync.
+- `alarms`: interval-based auto-sync scheduling.
+- Host permissions:
+  - `https://excalidraw.com/*` and `https://app.excalidraw.com/*`: integrate with Excalidraw pages.
+  - Google API hosts: used only for Drive sync flows.
 
-3. Run extension dev mode:
+## Known Limitations
 
-```bash
-pnpm dev
-```
+- Google Drive sync is experimental and optional.
 
-4. Load generated extension folder in Chrome (`chrome://extensions`, Developer mode, Load unpacked).
+## Documentation
 
-## Scripts
+- Contributing guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-- `pnpm dev` - start dev build/watch
-- `pnpm build` - production build
-- `pnpm zip` - zip bundle
-- `pnpm test` - run vitest
-- `pnpm lint` - run oxlint
-- `pnpm format` - run oxfmt
-- `pnpm typecheck` - TypeScript checks
+## License
 
-## Releases
-
-GitHub Releases are used to publish installable extension bundles for Chrome and Firefox.
-
-- Workflow: `Release Extension Bundles`
-- Auto trigger: push a version tag matching `package.json` version (`vX.Y.Z`)
-- Manual trigger: run `workflow_dispatch` (uses existing matching tag only)
-
-Release rules:
-
-- `package.json` version is authoritative
-- Pushed tag must exactly match `v${package.json.version}` or workflow fails
-- Manual runs use `v${package.json.version}`
-- If the matching tag is missing in a manual run, the workflow fails with instructions to push the tag first
-
-Published release assets:
-
-- `.output/excalib-<version>-chrome.zip`
-- `.output/excalib-<version>-firefox.zip`
-
-## Main Architecture
-
-- Background service
-  - IndexedDB scene store (`scenes`, `payloads`, `backups`, `meta`)
-  - Google Drive integration (folder + manifest + scene files)
-  - Runtime message protocol dispatcher
-  - Auto-sync alarm scheduler
-- Content script
-  - Shadow-root mounted library sidebar UI
-  - Excalidraw data bridge for local storage + files IndexedDB snapshot/apply
-  - Autosave and auto-sync tick when tab is active
-  - Auth, sync controls, and settings editing
-  - Shared notification and confirm wrappers
-
-## Notes
-
-- Switching scenes applies the selected payload, then reloads the Excalidraw tab to ensure the app consumes the updated local data.
-- Sync uses a manifest file (`manifest.json`) inside a Drive folder named `Excalib`.
-- Scene delete is soft-delete first (Archive). Purge permanently removes local scene and backups.
+[MIT](./LICENSE)
