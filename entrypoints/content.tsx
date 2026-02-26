@@ -9,12 +9,12 @@ import { setupKeyboardShortcutFirewall } from "@/src/lib/keyboard-firewall";
 export default defineContentScript({
   matches: ["https://excalidraw.com/*", "https://app.excalidraw.com/*"],
   main() {
-    if (document.getElementById("excalidraw-shelf-shadow-host")) {
+    if (document.getElementById("excalib-shadow-host")) {
       return;
     }
 
     const host = document.createElement("div");
-    host.id = "excalidraw-shelf-shadow-host";
+    host.id = "excalib-shadow-host";
 
     const shadowRoot = host.attachShadow({ mode: "open" });
 

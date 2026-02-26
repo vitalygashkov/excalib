@@ -32,7 +32,7 @@ let dbPromise: Promise<IDBPDatabase<ShelfDbSchema>> | null = null;
 
 export function getShelfDb() {
   if (!dbPromise) {
-    dbPromise = openDB<ShelfDbSchema>("excalidraw-shelf-db", 1, {
+    dbPromise = openDB<ShelfDbSchema>("excalib-db", 1, {
       upgrade(db) {
         if (!db.objectStoreNames.contains("scenes")) {
           const sceneStore = db.createObjectStore("scenes", { keyPath: "id" });

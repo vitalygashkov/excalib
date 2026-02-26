@@ -1,7 +1,7 @@
 import { getSettings } from "@/src/background/settings";
 import { runSync } from "@/src/background/sync";
 
-const AUTO_SYNC_ALARM = "excalidraw-shelf:auto-sync";
+const AUTO_SYNC_ALARM = "excalib:auto-sync";
 
 export async function configureAutoSyncAlarm() {
   const settings = await getSettings();

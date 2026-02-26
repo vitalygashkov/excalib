@@ -9,7 +9,7 @@ import type {
 const DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3";
 const DRIVE_UPLOAD_ROOT = "https://www.googleapis.com/upload/drive/v3";
 const SCENE_FILE_MIME = "application/json";
-const SHELF_FOLDER_NAME = "Excalidraw Shelf";
+const SHELF_FOLDER_NAME = "Excalib";
 const SHELF_MANIFEST_NAME = "manifest.json";
 
 function parseDriveTime(value: string | undefined) {

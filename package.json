@@ -1,5 +1,5 @@
 {
-  "name": "excalidraw-shelf",
+  "name": "excalib",
   "version": "0.1.0",
   "private": true,
   "description": "Manage Excalidraw scenes and sync them with cloud storage",

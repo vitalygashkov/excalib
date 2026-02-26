@@ -9,10 +9,10 @@ export default defineConfig({
     disabled: true,
   },
   manifest: {
-    name: "Excalidraw Shelf",
+    name: "Excalib",
     description: "Manage multiple Excalidraw scenes and sync with Google Drive.",
     action: {
-      default_title: "Excalidraw Shelf",
+      default_title: "Excalib",
     },
     permissions: ["storage", "identity", "alarms"],
     host_permissions: [
